@@ -1,34 +1,29 @@
 import { Component } from 'react';
 import { Box } from './Box';
 import { ImageGallery } from './ImageGallery/ImageGallery';
-import { Modal } from './Modal/Modal';
+
 import { Searchbar } from './Searchbar/Searchbar';
 import { Button } from './Button/Button';
 
+import { Loader } from './Loader/Loader';
+
 export class App extends Component {
   state = {
-    images: null,
-    showModal: false,
+    images: [],
     loading: false,
     nameImages: '',
     error: null,
+    page: 1,
   };
 
-  componentDidMount() {
-    // this.setState({ loading: true });
-    // fetch(
-    //   'https://pixabay.com/api/?q=cat&page=1&key=32447548-ed7836316881b22e9c049cde5&image_type=photo&orientation=horizontal&per_page=12'
-    // )
-    //   .then(res => res.json())
-    //   .then(images => this.setState({ images }))
-    //   .finally(() => this.setState({ loading: false }));
-  }
-
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.nameImages !== this.state.nameImages) {
+    if (
+      prevState.page !== this.state.page ||
+      prevState.nameImages !== this.state.nameImages
+    ) {
       this.setState({ loading: true });
       fetch(
-        `https://pixabay.com/api/?q=${this.state.nameImages}&page=1&key=32447548-ed7836316881b22e9c049cde5&image_type=photo&orientation=horizontal&per_page=12`
+        `https://pixabay.com/api/?q=${this.state.nameImages}&page=${this.state.page}&key=32447548-ed7836316881b22e9c049cde5&image_type=photo&orientation=horizontal&per_page=12`
       )
         .then(response => {
           if (response.ok) {
@@ -38,27 +33,27 @@ export class App extends Component {
             new Error(`No images and photos ${this.state.nameImages}`)
           );
         })
-        .then(images => this.setState({ images }))
+        .then(images =>
+          this.setState(prevState => ({
+            images: [...prevState.images, ...images.hits],
+          }))
+        )
         .catch(error => this.setState({ error }))
         .finally(() => this.setState({ loading: false }));
     }
   }
 
-  componentWillUnmount() {}
-
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
+  handleFormSubmit = nameImages => {
+    this.setState({ nameImages: nameImages, page: 1, images: [] });
   };
 
-  handleFormSubmit = nameImages => {
-    this.setState({ nameImages: nameImages });
+  loadMore = () => {
+    this.setState(prevState => ({ page: prevState.page + 1 }));
   };
 
   render() {
-    const { showModal, loading, images, error } = this.state;
-    const { toggleModal, handleFormSubmit } = this;
+    const { loading, images, error } = this.state;
+    const { handleFormSubmit, loadMore } = this;
 
     return (
       <Box
@@ -68,17 +63,14 @@ export class App extends Component {
         paddingBottom={24}
       >
         <Searchbar onSubmit={handleFormSubmit} />
-        {error && <Box as="p">{error.message}</Box>}
-        {loading && <Box as="p">Loader spinner</Box>}
-        {!images && <Box as="p">Search images and photos</Box>}
 
-        {images && <ImageGallery images={images} onClick={toggleModal} />}
-        {showModal && (
-          <Modal onClose={toggleModal}>
-            <h1>Content children</h1>
-          </Modal>
-        )}
-        {images && <Button onClick={toggleModal} />}
+        {error && <Box as="p">{error.message}</Box>}
+
+        {images.length >= 1 && <ImageGallery images={images} />}
+
+        {loading && <Loader />}
+
+        {images.length >= 12 && <Button onClick={loadMore} />}
       </Box>
     );
   }
