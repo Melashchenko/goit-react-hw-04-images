@@ -44,6 +44,9 @@ export class App extends Component {
   }
 
   handleFormSubmit = nameImages => {
+    if (this.state.nameImages === nameImages) {
+      return;
+    }
     this.setState({ nameImages: nameImages, page: 1, images: [] });
   };
 
