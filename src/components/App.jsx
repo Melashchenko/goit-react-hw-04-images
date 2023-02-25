@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Box } from './Box';
 import { ImageGallery } from './ImageGallery/ImageGallery';
 
@@ -7,74 +7,71 @@ import { Button } from './Button/Button';
 
 import { Loader } from './Loader/Loader';
 
-export class App extends Component {
-  state = {
-    images: [],
-    loading: false,
-    nameImages: '',
-    error: null,
-    page: 1,
-  };
+export const App = () => {
+  const [images, getImages] = useState([]);
+  const [loading, getLoading] = useState(false);
+  const [nameImages, getNameImages] = useState('');
+  const [error, getError] = useState(null);
+  const [pages, getPage] = useState(1);
+  const [loadingMore, getLoadingMore] = useState(false);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.page !== this.state.page ||
-      prevState.nameImages !== this.state.nameImages
-    ) {
-      this.setState({ loading: true });
+  useEffect(() => {
+    if (nameImages !== '') {
+      getLoading(true);
       fetch(
-        `https://pixabay.com/api/?q=${this.state.nameImages}&page=${this.state.page}&key=32447548-ed7836316881b22e9c049cde5&image_type=photo&orientation=horizontal&per_page=12`
+        `https://pixabay.com/api/?q=${nameImages}&page=${pages}&key=32447548-ed7836316881b22e9c049cde5&image_type=photo&orientation=horizontal&per_page=12`
       )
         .then(response => {
           if (response.ok) {
             return response.json();
           }
           return Promise.reject(
-            new Error(`No images and photos ${this.state.nameImages}`)
+            new Error(`No images and photos ${nameImages}`)
           );
         })
-        .then(images =>
-          this.setState(prevState => ({
-            images: [...prevState.images, ...images.hits],
-          }))
-        )
-        .catch(error => this.setState({ error }))
-        .finally(() => this.setState({ loading: false }));
+        .then(images => {
+          return (
+            getImages(prevState => [...prevState, ...images.hits]),
+            images.hits.length >= 12
+              ? getLoadingMore(true)
+              : getLoadingMore(false)
+          );
+        })
+        .catch(error => getError(error))
+        .finally(() => getLoading(false));
     }
-  }
+  }, [nameImages, pages]);
 
-  handleFormSubmit = nameImages => {
-    if (this.state.nameImages === nameImages) {
+  const handleFormSubmit = newNameImages => {
+    if (nameImages === newNameImages) {
       return;
     }
-    this.setState({ nameImages: nameImages, page: 1, images: [] });
+
+    getNameImages(newNameImages);
+    getPage(1);
+    getImages([]);
   };
 
-  loadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const loadMore = () => {
+    getPage(prevState => prevState + 1);
   };
 
-  render() {
-    const { loading, images, error } = this.state;
-    const { handleFormSubmit, loadMore } = this;
+  return (
+    <Box
+      display="grid"
+      gridTemplateColumns="1fr"
+      gridGap={16}
+      paddingBottom={24}
+    >
+      <Searchbar onSubmit={handleFormSubmit} />
 
-    return (
-      <Box
-        display="grid"
-        gridTemplateColumns="1fr"
-        gridGap={16}
-        paddingBottom={24}
-      >
-        <Searchbar onSubmit={handleFormSubmit} />
+      {error && <Box as="p">{error.message}</Box>}
 
-        {error && <Box as="p">{error.message}</Box>}
+      {images.length >= 1 && <ImageGallery images={images} />}
 
-        {images.length >= 1 && <ImageGallery images={images} />}
+      {loading && <Loader />}
 
-        {loading && <Loader />}
-
-        {images.length >= 12 && <Button onClick={loadMore} />}
-      </Box>
-    );
-  }
-}
+      {loadingMore && <Button onClick={loadMore} />}
+    </Box>
+  );
+};
