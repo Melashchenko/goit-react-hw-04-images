@@ -10,10 +10,10 @@ import {
 } from './Searchbar.styled';
 
 export const Searchbar = ({ onSubmit }) => {
-  const [nameImages, getNameImages] = useState('');
+  const [nameImages, setNameImages] = useState('');
 
   const handleImagesChange = e => {
-    getNameImages(e.currentTarget.value.toLowerCase());
+    setNameImages(e.currentTarget.value.toLowerCase());
   };
 
   const handleSubmit = e => {
@@ -25,7 +25,7 @@ export const Searchbar = ({ onSubmit }) => {
     }
 
     onSubmit(nameImages);
-    getNameImages('');
+    setNameImages('');
   };
 
   return (

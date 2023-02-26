@@ -7,7 +7,7 @@ import { GalleryItem, Img } from './ImageGalleryItem.styled';
 export const ImageGalleryItem = ({
   image: { webformatURL, tags, largeImageURL },
 }) => {
-  const [showModal, getShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   return (
     <>
@@ -15,11 +15,11 @@ export const ImageGalleryItem = ({
         <Img
           src={webformatURL}
           alt={tags}
-          onClick={() => getShowModal(!showModal)}
+          onClick={() => setShowModal(!showModal)}
         />
       </GalleryItem>
       {showModal && (
-        <Modal onClose={() => getShowModal(!showModal)}>
+        <Modal onClose={() => setShowModal(!showModal)}>
           <img src={largeImageURL} alt={tags} />
         </Modal>
       )}

@@ -8,16 +8,16 @@ import { Button } from './Button/Button';
 import { Loader } from './Loader/Loader';
 
 export const App = () => {
-  const [images, getImages] = useState([]);
-  const [loading, getLoading] = useState(false);
-  const [nameImages, getNameImages] = useState('');
-  const [error, getError] = useState(null);
-  const [pages, getPage] = useState(1);
-  const [loadingMore, getLoadingMore] = useState(false);
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [nameImages, setNameImages] = useState('');
+  const [error, setError] = useState(null);
+  const [pages, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     if (nameImages !== '') {
-      getLoading(true);
+      setLoading(true);
       fetch(
         `https://pixabay.com/api/?q=${nameImages}&page=${pages}&key=32447548-ed7836316881b22e9c049cde5&image_type=photo&orientation=horizontal&per_page=12`
       )
@@ -31,14 +31,14 @@ export const App = () => {
         })
         .then(images => {
           return (
-            getImages(prevState => [...prevState, ...images.hits]),
+            setImages(prevState => [...prevState, ...images.hits]),
             images.hits.length >= 12
-              ? getLoadingMore(true)
-              : getLoadingMore(false)
+              ? setLoadingMore(true)
+              : setLoadingMore(false)
           );
         })
-        .catch(error => getError(error))
-        .finally(() => getLoading(false));
+        .catch(error => setError(error))
+        .finally(() => setLoading(false));
     }
   }, [nameImages, pages]);
 
@@ -47,13 +47,13 @@ export const App = () => {
       return;
     }
 
-    getNameImages(newNameImages);
-    getPage(1);
-    getImages([]);
+    setNameImages(newNameImages);
+    setPage(1);
+    setImages([]);
   };
 
   const loadMore = () => {
-    getPage(prevState => prevState + 1);
+    setPage(prevState => prevState + 1);
   };
 
   return (
